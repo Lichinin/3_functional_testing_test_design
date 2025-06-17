@@ -5,12 +5,14 @@
   - [1. Общие сведения](#1-общие-сведения)
   - [2. Предусловия](#2-предусловия)
   - [3. Тесткейсы](#3-тесткейсы)
-    - [3.1. Позитивные сценарии (проверка расчёта стоимости)](#31-позитивные-сценарии-проверка-расчёта-стоимости)
-    - [3.2. Негативные сценарии (проверка расчёта стоимости)](#32-негативные-сценарии-проверка-расчёта-стоимости)
+    - [3.1. Граничные значения для `start`](#31-граничные-значения-для-start)
+    - [3.2. Граничные значения для `count`](#32-граничные-значения-для-count)
+    - [3.3. Негативные сценарии (проверка расчёта стоимости)](#33-негативные-сценарии-проверка-расчёта-стоимости)
   - [4. Формат отчетности](#4-формат-отчетности)
     - [Формат Bug Report](#формат-bug-report)
     - [Формат  Summary Report](#формат--summary-report)
   - [5. Критерии завершения тестирования](#5-критерии-завершения-тестирования)
+
 
 
 ## 1. Общие сведения
@@ -34,27 +36,39 @@
 * `invalidToken` - невалидный токен пользователя
 
 ## 3. Тесткейсы
-Тестовые сценарии:
-### 3.1. Позитивные сценарии (проверка расчёта стоимости)
+* *Примечание: все позитивные сценарии проверяются через тестирование граничных значений*
+
+
+
+### 3.1. Граничные значения для `start`
 
 №|Название теста|Описание|Параметры запроса|Ожидаемый результат|Фактический результат|Статус|
 |---|---|---|---|---|---|---|
-|1|Полная партия (начало)|Заказ полной партии из 5 штук, начиная с 0|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=5|`200 OK`<br>`json: { "cost": 100}`<br>(30+25+20+15+10)| | |
-|2|Частичная покупка внутри партии|Заказ 2 шт. с середины текущей партии|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=2<br>`count`=2|`200 OK`<br>`json: { "cost": 35}`<br>(20+15)| | |
-|3|Много партий (выход за пределы одной)|Заказ больше 5 шт. — продолжение цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=7|`200 OK`<br>`json: { "cost": 155}`<br> (30+25+20+15+10)+(30+25)| | |
-|4|Конец партии|Заказ последних двух шт. текущей партии|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=3<br>`count`=2|`200 OK`<br>`json: { "cost": 25}`<br> (15+10)| | |
-|5|Минимальный запрос (конец партии)|Запрос одного экземпляра — конец текущей партии|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=4<br>`count`=1|`200 OK`<br>`json: { "cost": 10}`<br>(последний элемент партии)| | |
-|6|Переход в новую партию|Запрос первого экземпляра следующей партии|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=5<br>`count`=1|`200 OK`<br>`json: { "cost": 30}`<br>(начало новой партии)| | |
-|7|Продолжение цикла (вторая партия)|Заказ нескольких штук во второй партии|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=6<br>`count`=3|`200 OK`<br>`json: { "cost": 60}`<br>(25+20+15)| | |
+|1|start = -1|Отрицательное значение индекса начального товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=-1<br>`count`=1|`400 Bad Request`|||
+|2|start = 0|Первый элемент первого цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=1|`200 OK`<br>`json: { "cost": 30}`|||
+|3|start = 1|Второй элемент первого цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=1<br>`count`=1|`200 OK`<br>`json: { "cost": 25}`|||
+|4|start = 4|Последний элемент первого цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=4<br>`count`=1|`200 OK`<br>`json: { "cost": 10}`|||
+|5|start = 5|Первый элемент второго цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=5<br>`count`=1|`200 OK`<br>`json: { "cost": 30}`|||
+|6|start = 6|Второй элемент второго цикла цен|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=6<br>`count`=1|`200 OK`<br>`json: { "cost": 25}`<br>|||
 
-### 3.2. Негативные сценарии (проверка расчёта стоимости)
+### 3.2. Граничные значения для `count`
+
+№|Название теста|Описание|Параметры запроса|Ожидаемый результат|Фактический результат|Статус|
+|---|---|---|---|---|---|---|
+|1|count = 0|Заказ нулевого количества товаров|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=0|`400 Bad Request`|||
+|2|count = 1|Заказ 1 единицы товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=1|`200 OK`<br>`json: { "cost": 30}`|||
+|3|count = 2|Заказ 2 единиц товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=2|`200 OK`<br>`json: { "cost": 55}`|||
+|4|count = 4|Заказ 4 единиц товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=4|`200 OK`<br>`json: { "cost": 90}`|||
+|5|count = 5|Заказ 5 единиц товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=5|`200 OK`<br>`json: { "cost": 100}`|||
+|6|count = 6|Заказ 6 единиц товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=0<br>`count`=6|`200 OK`<br>`json: { "cost": 130}`|||
+
+
+### 3.3. Негативные сценарии (проверка расчёта стоимости)
 
 №|Название теста|Описание|Параметры запроса|Ожидаемый результат|Фактический результат|Статус|
 |---|---|---|---|---|---|---|
 |8|Несуществующий `productId`|Запрос несуществующего товара|`authToken`=`validToken`<br>`productid`=`invaliProductId`<br>`start`=1<br>`count`=1|`404 Not Found`|||
 |9|Неверный `authToken`|Неавторизованный доступ|`authToken`=`invalidToken`<br>`productid`=`valiProductId`<br>`start`=1<br>`count`=1|`401 Unauthorized`|||
-|10|Отрицательный `start`|Отрицательное количество имеющегося товара|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=-1<br>`count`=1|`400 Bad Request`|||
-|11|Невалидный `count`=0|	Заказ нуля товаров|`authToken`=`validToken`<br>`productid`=`valiProductId`<br>`start`=<br>`count`=0|`400 Bad Request`|||
 
 ## 4. Формат отчетности
 
